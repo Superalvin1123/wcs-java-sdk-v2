@@ -219,55 +219,53 @@ For large objects, please use **multipart upload**. And every part to upload sho
 
 **Form-based upload** allows to upload by way of browser form.
 
-If the uploaded object permission is set to the anonymous user’s read permission, after the object is successfully uploaded, the anonymous user can access the object data through the link address. The format of the object link address is: https://space name.domain name/folder directory level/object name. If the object exists in the root directory of the space, the link address will not need to have a folder directory hierarchy.
+SDK supports to upload objects of 0~5GB. For stream upload and object upload, content size should not be over 5GB; if you want to upload a large file, please use multipart upload. And form-based upload provides a way to upload objects based on browser forms.
 
-SDK支持上传0KB~5GB的对象。流式上传、文件上传的内容大小不能超过5GB；当上传较大文件时，请使用分段上传，分段上传每段内容大小不能超过5GB；基于表单上传提供了基于浏览器表单上传对象的方式。
+Anonymous users can access the objects when read permission is set to  anonymous user’s reading. This way, the URL of an object will be like: https://bucket name.domain name/folder name/object name.
 
-若上传的对象权限设置为匿名用户读取权限，对象上传成功后，匿名用户可通过链接地址访问该对象数据。对象链接地址格式为：https://空间名.域名/文件夹目录层级/对象名。如果该对象存在于空间的根目录下，则链接地址将不需要有文件夹目录层级。
+## 1. Stream upload
+##java.io .InputStream## is used as the resource for stream upload. You can use 'WosClient.putObject' to perform stream upload.
 
-## 1.流式上传
-流式上传使用java.io.InputStream作为对象的数据源。您可以通过WosClient.putObject上传您的数据流到WOS。以下代码展示了如何进行流式上传：
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
 config.setConnectionTimeout(10000);
 config.setEndPoint(endPoint);
 
-上传字符串（byte数组）
+
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 String content = "Hello WOS";
 wosClient.putObject("bucketname", "objectname", new ByteArrayInputStream(content.getBytes()));
-上传网络流
+
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 InputStream inputStream = new URL("http://www.a.com").openStream();
 wosClient.putObject("bucketname", "objectname", inputStream);
-上传文件流
+
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 FileInputStream fis = new FileInputStream(new File("localfile"));  // 待上传的本地文件路径，需要指定到具体的文件名
 wosClient.putObject("bucketname", "objectname", fis);
 ```
-须知：
-推荐使用文件上传的形式上传本地文件，而不是文件流形式。
-大文件上传建议使用分段上传。
-上传内容大小不能超过5GB。
+Note:
+- For large localfiles, you should always use object upload not stream upload.
+- For files over 5GB, multipart upload is recommended.
 
-## 2.文件上传
-文件上传使用本地文件作为对象的数据源。以下代码展示了如何进行文件上传：
+## 2. File upload
+File upload takes local files as resources.
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -277,16 +275,17 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 wosClient.putObject("bucketname", "objectname", new File("localfile")); // localfile为待上传的本地文件路径，需要指定到具体的文件名
 ```
-说明：
-- 上传内容大小不能超过5GB。
+Note:
+-  Files to upload should not be larger than 5GB.
 
-## 3.创建文件夹
-WOS本身是没有文件夹的概念的，空间中存储的元素只有对象。创建文件夹实际上是创建了一个大小为0且对象名以“/”结尾的对象，这类对象与其他对象无任何差异，可以进行下载、删除等操作，只是WOS控制台会将这类以“/”结尾的对象以文件夹的方式展示。
+## 3. Create a folder
+There is no 'folder' in Object Storage, what stored in bucket are objects actually. When you created a 'folder', you have created an object whose size is 0 and name ends by '/'. These 'folders' have no difference with objects, you can download and delete them as well. And they are showed as folders you see on Object Storage.
+
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -296,29 +295,32 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 final String keySuffixWithSlash = "parent_directory/";
 wosClient.putObject("bucketname", keySuffixWithSlash, new ByteArrayInputStream(new byte[0]));
 
-// 在文件夹下创建对象
+
 wosClient.putObject("bucketname", keySuffixWithSlash + "objectname", new ByteArrayInputStream("Hello WOS".getBytes()));
 ```
-说明：
-- 创建文件夹本质上来说是创建了一个大小为0且对象名以“/”结尾的对象。
-- 多级文件夹创建最后一级即可，比如src1/src2/src3/，创建src1/src2/src3/即可，无需创建src1/、src1/src2/。
+Note:
+- Just create the last level of multi-level folders, for example, to create an folder "src1/src2/src3/", no need to create "src1/", "src1/src2/".
 
-## 4.设置对象属性
-您可以在上传对象时设置对象属性。对象属性包含对象长度、对象MIME类型、对象MD5值（用于校验）、对象存储类型、对象自定义元数据。对象属性可以在多种上传方式下（流式上传、文件上传、分段上传），或复制对象时进行设置。
+## 4. Set properties of the object
+You can set properties of an object before upload, including length, MD5 value, customized metadata, etc.
 
-对象属性详细说明见下表：
+For details of properties, see in the following:
 
-<table class="wrapped confluenceTable"><colgroup><col /><col /><col /></colgroup><tbody><tr><th class="confluenceTh">名称</th><th class="confluenceTh">描述</th><th class="confluenceTh">默认值</th></tr><tr><td class="confluenceTd">对象长度（Content-Length）</td><td class="confluenceTd">上传对象的长度，超过流/文件的长度会截断。</td><td class="confluenceTd">流/文件实际长度</td></tr><tr><td class="confluenceTd">对象MIME类型（Content-Type）</td><td class="confluenceTd">对象的MIME类型，定义对象的类型及网页编码，决定浏览器将以什么形式、什么编码读取对象。</td><td class="confluenceTd">application/octet-stream</td></tr><tr><td class="confluenceTd">对象MD5值（Content-MD5）</td><td class="confluenceTd">对象数据的MD5值（经过Base64编码），提供给WOS服务端，校验数据完整性。</td><td class="confluenceTd">无</td></tr><tr><td class="confluenceTd">对象存储类型</td><td class="confluenceTd">对象的存储类型，不同的存储类型可以满足客户业务对存储性能、成本的不同诉求。默认与空间的存储类型保持一致，可以设置为与空间的存储类型不同。</td><td class="confluenceTd">无</td></tr><tr><td class="confluenceTd">对象自定义元数据</td><td class="confluenceTd">用户对上传到空间中对象的自定义属性描述，以便对对象进行自定义管理。</td><td class="confluenceTd">无</td></tr></tbody></table>
+| Name | Description | Default value |
+| -- | -- | -- |
+|Object length </br>(Content-Length) | The length of the uploaded object will be truncated if it exceeds the length of the stream/file.	| Actual length of stream/file
+|Object MIME type </br>(Content-Type) | The MIME type of the object defines the type of the object and the encoding of the web page, and determines in what form and encoding the browser will read the object.	| application/octet-stream
+|Object MD5 value </br>(Content-MD5)| The MD5 value of the object data (encoded by Base64) is provided to the WOS server to verify the integrity of the data. | N/A
+|Customized metadata	| The user describes the custom attributes of the objects uploaded to the space in order to customize the management of the objects. | N/A
 
-
-## 设置对象长度
-您可以通过ObjectMetadata.setContentLength来设置对象长度。以下代码展示如何设置对象长度：
+## Set object length
+You can set the object length with 'ObjectMetadata.setContentLength'. 
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -328,7 +330,7 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 ObjectMetadata metadata = new ObjectMetadata();
@@ -336,8 +338,8 @@ metadata.setContentLength(1024 * 1024L);// 1MB
 wosClient.putObject("bucketname", "objectname", new File("localfile"), metadata);
 ```
 
-## 设置对象MIME类型
-您可以通过ObjectMetadata.setContentType来设置对象MIME类型。以下代码展示如何设置对象MIME类型：
+## Set MIME type
+You can set MIME type with 'ObjectMetadata.setContentType'.
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -347,18 +349,17 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
-// 上传图片
 ObjectMetadata metadata = new ObjectMetadata();
 metadata.setContentType("image/jpeg");
 wosClient.putObject("bucketname", "objectname.jpg", new File("localimage.jpg"), metadata);
 ```
-说明：如果未设置对象MIME类型，SDK会根据上传对象的后缀名自动判断对象MIME类型，如.xml判断为application/xml文件；.html判断为text/html文件。
+Note: If MIME type is not set, SDK will set MIMI type by the suffix of an object. For example, "application/xml" is set as MIME type of ".xml"; "text/html" is set as MIME type of ".html".
 
-## 设置对象MD5值
-您可以通过ObjectMetadata.setContentMd5来设置对象MD5值。以下代码展示如何设置对象MD5值：
+## Set MD5 value
+You can set MD5 with 'ObjectMetadata.setContentMd5'.
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -368,22 +369,22 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
-// 上传图片
+
 ObjectMetadata metadata = new ObjectMetadata();
 metadata.setContentMd5("your md5 which should be encoded by base64");
 wosClient.putObject("bucketname", "objectname", new File("localimage.jpg"), metadata);
 ```
-说明：
+Note:
 
-- 对象数据的MD5值必须经过Base64编码。
-- WOS服务端会将该MD5值与对象数据计算出的MD5值进行对比，如果不匹配则上传失败，返回HTTP 400错误。
-- 如果不设置对象的MD5值，WOS服务端会忽略对对象数据的MD5值校验。
-- 您可以通过WosClient.base64Md5来直接计算Content-MD5头域。
+- MD5 value must be Base64 encoded
+- 'HTTP 400' is returned when MD5 does not match with MD5 computed by object content.
+- MD5 is not verified when MD5 of the object is not set.
+- You can directly compute the Content-MD5 header field through 'WosClient.base64Md5'.
 
-## 设置对象存储类型
-您可以通过ObjectMetadata.setObjectStorageClass来设置对象存储类型。以下代码展示如何设置对象存储类型：
+## Set customized metadata
+You can set customized metadata with 'ObjectMetadata.addUserMetadata'.
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -394,31 +395,6 @@ String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
 
-// 创建WosClient实例
-WosClient wosClient = new WosClient(ak, sk, config, regionName);
-
-ObjectMetadata metadata = new ObjectMetadata();
-// 设置对象存储类型为低频访问存储
-metadata.setObjectStorageClass(StorageClassEnum.ia);
-wosClient.putObject("bucketname", "objectname", new File("localfile"), metadata);
-```
-说明：
-- 如果未设置，对象的存储类型默认与空间的存储类型保持一致。
-- 对象的存储类型分为三类，其含义与空间存储类型一致。
-- 下载归档存储类型的对象前必须将其取回。
-
-## 设置对象自定义元数据
-您可以通过ObjectMetadata.addUserMetadata来设置对象自定义元数据。以下代码展示如何设置对象自定义元数据：
-```
-WosConfiguration config = new WosConfiguration();
-config.setSocketTimeout(30000);
-config.setConnectionTimeout(10000);
-config.setEndPoint(endPoint);
-
-String endPoint = "https://your-endpoint";
-String ak = "*** Provide your Access Key ***";
-String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 ObjectMetadata metadata = new ObjectMetadata();
@@ -426,11 +402,11 @@ metadata.addUserMetadata("property1", "property-value1");
 metadata.getMetadata().put("property2", "property-value2");
 wosClient.putObject("bucketname", "objectname", new File("localfile"), metadata);
 ```
-说明：
-- 在上面设置对象自定义元数据示例代码中，用户自定义了一个名称为“property1”，值为“property-value1”的元数据和一个名称为“property2”，值为“property-value2”的元数据。
-- 一个对象可以有多个元数据，总大小不能超过8KB。
-- 对象的自定义元数据可以通过WosClient.getObjectMetadata获取，参见获取对象元数据。
-- 使用WosClient.getObject下载对象时，对象的自定义元数据也会同时下载。
+Note:
+- In the code above, two customized metadata are set, they are “property1” and “property2”.
+- An object can have multiple metadata,but total size of which cannot exceed 8KB.
+- You can get customized metadata with 'WosClient.getObjectMetadata', see details in Get Metadata.
+- Customized metadata will be download with the object when using 'WosClient.getObject'.
 
 ## 5.分段上传
 对于较大文件上传，可以切分成段上传。用户可以在如下的应用场景内（但不仅限于此），使用分段上传的模式：

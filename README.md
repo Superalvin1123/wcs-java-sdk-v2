@@ -1,17 +1,8 @@
-# 前言
-本文档基于WCS Java SDK Rest V2 1.0.0版本编写。
+# Preparation
+Please pre-install Java, Java 8 or above recommended. You can check your Java version with `java -version`.
 
-# 示例代码
-WCS Java SDK Rest V2提供丰富的示例代码，方便您参考或直接使用。示例代码包括以下内容：
-
-# 安装
-进行各类操作前，您需要先安装Java SDK。
-
-## 前提条件
-使用Java 8及以上版本。您可以通过命令java -version查看Java版本。
-
-## 安装SDK
-### 在Maven项目中加入依赖项
+## Install SDK
+### Add dependencies to Maven project
 ```
 <dependency>
   <groupId>com.chinanetcenter.wcs.sdk</groupId>
@@ -19,21 +10,20 @@ WCS Java SDK Rest V2提供丰富的示例代码，方便您参考或直接使用
   <version>1.0.3</version>
 </dependency>
 ```
-### 通过GitHub下载
-您可以通过以下方式安装SDK。
+### Import jars on Intellij IDEA
 
-在Intellij IDEA项目中导入JAR包
+You may install as follows:
 
-以1.0.0版本为例，步骤如下：
+1. Download Java SDK package from github.
+2. decompress the package.
+3. Copy wcs-java-sdk-rest-v2-1.0.0.jar and all jar packages under `lib` to your project.
+4. Select your project on Intellij IDEA: File->Project Structure->Modules->Dependencies->+->JARs or directories.
+5. Select all the jars you copied on step 3, import them to External Libraries.
 
-1. 下载Java SDK开发包
-2. 解压该开发包。
-3. 将解压后文件夹中的文件wcs-java-sdk-rest-v2-1.0.0.jar以及lib文件夹下的所有JAR文件拷贝到您的项目中。
-4. 在Intellij IDEA中选择您的工程，右键选择File->Project Structure->Modules->Dependencies->+->JARs or directories 。
-5. 选中拷贝的所有JAR文件，导入到External Libraries中。
+### Initialization
+`WosClient` is a Java client, which is used to manage bucket and object.When using Java SDK, you should initialize and adjust default settings in `WosConfiguration` first.
 
-## 初始化
-WosClient是Java客户端，用于管理存储空间和文件等资源。使用Java SDK发起对象操作请求，您需要初始化一个WosClient实例，并根据需要修改WosConfiguration的默认配置项。
+**example**
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -45,46 +35,42 @@ String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
 ```
 
-### 创建WosClient实例
+### Create an instance of WosClient
 ```
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
-### 使用访问WOS
-        
-// 关闭wosClient
+//close wosClient
 wosClient.close();
 ```
 
-## 新建WosClient
-新建WosClient时，需要指定Endpoint。您的工程中可以有一个或多个WosClient。WosClient可以并发使用。
+Note: `Endpoint` should be specified when creating an WosClient. You can have one or more WosClients and use them concurrently in your project.
 
-## 配置WosClient
-WosConfiguration是WosClient的配置类，您可通过此类来连接超时、最大连接数等参数。可设置的参数如下：
+## Configure WosClient
 
-| 参考 | 描述 | 方法 |
+You can use `WosConfiguration` to configure `WosClient`, including timeout, maximum numbers of connection, etc. See details in the list below:
+
+| Configuration | Description | method |
 | -- | -- | -- |
-|connectionTimeout | 建立HTTP/HTTPS连接的超时时间（单位：毫秒）。默认为60000毫秒。	| WosConfiguration.setConnectionTimeout
-|socketTimeout | Socket层传输数据的超时时间（单位：毫秒）。默认为60000毫秒。	| WosConfiguration.setSocketTimeout
-|idleConnectionTime| 	如果空闲时间超过此参数的设定值，则关闭连接（单位：毫秒）。默认为30000毫秒。	| WosConfiguration.setIdleConnectionTime
-|maxIdleConnections	| 连接池中最大空闲连接数，默认值：1000。	| WosConfiguration.setMaxIdleConnections
-|maxConnections	| 最大允许的HTTP并发请求数。默认为1000。	| WosConfiguration.setMaxConnections
-|maxErrorRetry	| 请求失败（请求异常、服务端报500或503错误等）后最大的重试次数。默认3次。	| WosConfiguration.setMaxErrorRetry
-|endPoint| 	连接WOS的服务地址。可包含协议类型、域名、端口号。示例：https://your-endpoint:443。	| WosConfiguration.setEndPoint
-|readBufferSize	| 从Socket流下载对象的缓存大小（单位：字节），-1表示不设置缓存。默认为-1。	| WosConfiguration.setReadBufferSize
-|writeBufferSize	| 上传对象到Socket流时的缓存大小（单位：字节），-1表示不设置缓存。默认为-1。	| WosConfiguration.setWriteBufferSize
-|pathStyle |  指定访问WOS服务的域名格式，默认为false。<br>false–使用bucketName.endpoint格式域名访问服务；<br>true-使用endpoint/bucketName格式域名访问服务。|WosConfiguration.setPathStyle
+|connectionTimeout | Set timeout for HTTP/HTTPS connetion (unit:ms), 60000 by default.	| WosConfiguration.setConnectionTimeout
+|socketTimeout | Set timeout for Socket(unit:ms), 60000 by default.	| WosConfiguration.setSocketTimeout
+|idleConnectionTime| 	An idle connection will be closed if it has been not working for a time more than idleConnectionTime (unit:ms). 30000 by default.	| WosConfiguration.setIdleConnectionTime
+|maxIdleConnections	| Maximum number of idle connections, 1000 by default.	| WosConfiguration.setMaxIdleConnections
+|maxConnections	| Maximum number of concurrencies for HTTP request, 1000 by default. | WosConfiguration.setMaxConnections
+|maxErrorRetry	| Retries when request failed, 3 by default.| WosConfiguration.setMaxErrorRetry
+|endPoint| 	Service address to access Object Storage, which may contain protocol, domain name and port. For example: https://your-endpoint:443	| WosConfiguration.setEndPoint
+|readBufferSize	| Buffer size of Socket stream when reading (unit:byte), -1 by default, indicating no buffer.	| WosConfiguration.setReadBufferSize
+|writeBufferSize	| Buffer size of Socket stream when writing(unit:byte), -1 by default, indicating no buffer.	| WosConfiguration.setWriteBufferSize
+|pathStyle | Style of domain name as `bucketName.endpoint` is used when pathStyle is false, otherwise, 'endpoint/bucketName' style is used. |WosConfiguration.setPathStyle
 
-# 快速入门
-本文介绍如何快速使用WCS Java SDK完成常见操作，如上传文件（Object）、下载文件等。
+# Quick Start
 
-## 1.上传对象
-以下代码展示如何上传对象至WOS：
+## 1. Upload an object
+
 ```
 wosClient.putObject("bucketname", "objectname", new ByteArrayInputStream("Hello WOS".getBytes()));
 ```
 
-## 2.下载对象
-以下代码展示如何获取对象的内容：
+## 2. Get an object
 ```
 WosObject wosObject = wosClient.getObject("bucketname", "objectname");
 InputStream content = wosObject.getObjectContent();
@@ -101,29 +87,29 @@ if (content != null)
     reader.close();
 }
 ```
-说明：
-- 调用wosObject.getObject返回一个WosObject实例，该实例包含对象内容及其属性。
-- 调用wosObject.getObjectContent获取对象输入流，可读取此输入流获取其内容，用完之后请关闭这个流。
+Note：
+- An instance of WosObject with contents and properties will be returned after calling `wosObject.getObject`
+- You can get content of an object by calling `wosObject.getObjectContent`. Remember to close it when finished.
 
-## 3.列举对象
-当完成一系列上传对象操作后，可能需要查看空间中包含哪些对象。以下代码展示如何列举指定空间的对象：
+## 3. List objects in a bucket
+
 ```
 ObjectListing objectListing = wosClient.listObjects("bucketname");
 for(WosObject wosObject : objectListing.getObjects()){
     System.out.println(" - " + wosObject .getObjectKey() + "  " +  "(size = " + wosObject .getMetadata().getContentLength() + ")");
 }
 ```
-说明：
-- 调用WosClient.listObjects返回ObjectListing实例，该实例包含此次listObject请求的返回结果，可通过ObjetListing.getObjects获取所有对象（Object）的描述信息。
-- 上面的代码默认列举1000个对象（Object）。
+Note：
+- An instance of ObjectListing is returned after calling `wosClient.listObjects`. You can get information of objects by calling `ObjetListing.getObjects`.
+- 1000 objects will be listed by default.
 
-## 4.删除对象
-以下代码展示如何删除指定的对象：
+## 4. Delete an object
+
 ```
 wosClient.deleteObject("bucketname", "objectname");
 ```
-## 5.获取文件下载地址
-以下代码展示如何获取带鉴权信息的URL
+## 5. Get URL with signature
+
 ```
 TemporarySignatureRequest req = new TemporarySignatureRequest(HttpMethodEnum.GET, 300);
 req.setBucketName(bucketName);
@@ -133,23 +119,21 @@ System.out.println("Getting object using temporary signature url:");
 System.out.println("\t" + res.getSignedUrl());
 ```
 
-## 5.WOS客户端通用示例
-使用WOS客户端进行接口调用操作完成后，没有异常抛出，则表明返回值有效，返回SDK公共响应头实例或其子类实例；若抛出异常，则说明操作失败，此时应从SDK自定义异常实例中获取错误信息。
+## 6. An example of WosClient
 
-以下代码展示了使用WOS客户端的通用方式：
 ```
-// 您的工程中可以只保留一个全局的WosClient实例
-// WosClient是线程安全的，可在并发场景下使用
+// You may keep only one global instance of WosClient.
+// WosClient is thread-safe, which can be used concurrently.
 WosClient wosClient = null; 
 try
 {
     String endPoint = "https://your-endpoint";
     String ak = "*** Provide your Access Key ***";
     String sk = "*** Provide your Secret Key ***";
-    // 创建WosClient实例
+    // Create an instance of WosClient
     wosClient = new WosClient(ak, sk, endPoint, regionName);
-    // 调用接口进行操作，例如上传对象
-    HeaderResponse response = wosClient.putObject("bucketname", "objectname", new File("localfile"));  // localfile为待上传的本地文件路径，需要指定到具体的文件名
+    // Put an object to the bucket
+    HeaderResponse response = wosClient.putObject("bucketname", "objectname", new File("localfile"));  
     System.out.println(response);
 }
 catch (WosException e)
@@ -161,8 +145,8 @@ catch (WosException e)
     System.out.println("Request ID:" + e.getErrorRequestId());
     System.out.println("Host ID:" + e.getErrorHostId());
 }finally{
-    // 关闭WosClient实例，如果是全局WosClient实例，可以不在每个方法调用完成后关闭
-    // WosClient在调用WosClient.close方法关闭后不能再次使用
+    // Close the client. It's not required to close the client after calling if it's a global instance of WosClient.
+    // WosClient is unavailable after calling WosClient.close()
     if(wosClient != null){
         try
         {
@@ -175,9 +159,9 @@ catch (WosException e)
 }
 ```
 
-# 管理空间
-## 1.列举空间
-您可以通过WosClient.listBuckets列举空间。以下代码展示如何获取空间列表：
+# Bucket Management
+## 1. List buckets
+You can list the buckets with `WosClient.listBuckets`.
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -187,10 +171,10 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
-// 列举空间
+// List buckets
 List<WosBucket> buckets = wosClient.listBuckets();
 for(WosBucket bucket : buckets){
     System.out.println("BucketName:" + bucket.getBucketName());
@@ -198,11 +182,11 @@ for(WosBucket bucket : buckets){
     System.out.println("Endpoint:" + bucket.getEndpoint());
 }
 ```
-说明：
-- 获取到的空间列表将按照空间名字典顺序排列。
+Note：
+- The bucket list is ordered by bucket name dictionary.
 
-## 2.判断空间是否存在
-您可以通过WosClient.headBucket接口判断该空间是否已存在。以下代码展示如何判断指定空间是否存在：
+## 2. Query existence of a bucket
+You know whether a bucket exits by calling `WosClient.headBucket`.
 ```
 WosConfiguration config = new WosConfiguration();
 config.setSocketTimeout(30000);
@@ -212,20 +196,31 @@ config.setEndPoint(endPoint);
 String endPoint = "https://your-endpoint";
 String ak = "*** Provide your Access Key ***";
 String sk = "*** Provide your Secret Key ***";
-// 创建WosClient实例
+
 WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 boolean exists = wosClient.headBucket("bucketname");
 ```
 
-# 上传对象
-对象上传简介
-在WOS中，用户操作的基本数据单元是对象。WOS Java SDK提供了丰富的对象上传接口，可以通过以下方式上传对象：
+# Upload
 
-- 流式上传
-- 文件上传
-- 分段上传
-- 基于表单上传
+Object is the basic unit in Object Storage. There are some ways to put objects to Object Storage:
+
+- Stream upload
+- Object upload
+- Multipart upload
+- Form-based upload
+
+Object within 5GB can be put to Object Storage by SDK.
+
+For **stream upload** and **object upload**, the object to upload should not be over 5GB.
+
+For large objects, please use **multipart upload**. And every part to upload should not be  over 5GB as well.
+
+**Form-based upload** allows to upload by way of browser form.
+
+If the uploaded object permission is set to the anonymous user’s read permission, after the object is successfully uploaded, the anonymous user can access the object data through the link address. The format of the object link address is: https://space name.domain name/folder directory level/object name. If the object exists in the root directory of the space, the link address will not need to have a folder directory hierarchy.
+
 SDK支持上传0KB~5GB的对象。流式上传、文件上传的内容大小不能超过5GB；当上传较大文件时，请使用分段上传，分段上传每段内容大小不能超过5GB；基于表单上传提供了基于浏览器表单上传对象的方式。
 
 若上传的对象权限设置为匿名用户读取权限，对象上传成功后，匿名用户可通过链接地址访问该对象数据。对象链接地址格式为：https://空间名.域名/文件夹目录层级/对象名。如果该对象存在于空间的根目录下，则链接地址将不需要有文件夹目录层级。
@@ -1539,7 +1534,7 @@ System.out.println("\t" + result.getEtag());
 
 您可以使用的限定条件如下：
 
- <table class="wrapped confluenceTable"><colgroup><col /><col /><col /></colgroup><tbody><tr><th class="confluenceTh">&nbsp;参数</th><th class="confluenceTh">作用</th><th class="confluenceTh">WOS Java SDK对应方法</th></tr><tr><td class="confluenceTd">Copy-Source-If-Modified-Since</td><td class="confluenceTd">如果源对象的修改时间晚于该参数值指定的时间，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfModifiedSince</td></tr><tr><td class="confluenceTd">Copy-Source-If-Unmodified-Since</td><td class="confluenceTd">如果源对象的修改时间早于该参数值指定的时间，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfUnmodifiedSince</td></tr><tr><td class="confluenceTd">Copy-Source-If-Match</td><td class="confluenceTd">如果源对象的ETag值与该参数值相同，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfMatchTag</td></tr><tr><td class="confluenceTd">Copy-Source-If-None-Match</td><td class="confluenceTd">如果源对象的ETag值与该参数值不相同，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfNoneMatchTag</td></tr></tbody></table>
+ <table class="wrapped confluenceTable"><colgroup><col /><col /><col /></colgroup><tbody><tr><th class="confluenceTh">&nbsp;参数</th><th class="confluenceTh">作用</th><th class="confluenceTh">WOS Java SDK对应方法</th></tr><tr><td class="confluenceTd">Copy-Source-If-Modified-Since</td><td class="confluenceTd">如果源对象的修改时间晚于该参数值指定的时间，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfModifiedSince</td></tr><tr><td class="confluenceTd">Copy-Source-If-Unmodified-Since</td><td class="confluenceTd">如果源对象的修改时间早于该参数值指定的时间，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfUnmodifiedSince</td></tr><tr><td class="confluenceTd">Copy-Source-If-Match</td><td class="confluenceTd">如果源对象的ETag值与该参数值相同，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfMatchTag</td></tr><tr><td class="confluenceTd">Copy-Source-If-None-Match</td><td class="confluenceTd">如果源对象的ETag值与该参数值不相同，则进行复制，否则抛出异常。</td><td class="confluenceTd">CopyObjectRequest.setIfNoneMatchTag</td></tr></tbody></table>
 
 说明：
 - 源对象的ETag值是指源对象数据的MD5校验值。
@@ -1761,3 +1756,4 @@ WosClient wosClient = new WosClient(ak, sk, config, regionName);
 
 wosClient.deleteBucketLifecycle("bucketname");
 ```
+![image](https://user-images.githubusercontent.com/98135632/153330698-be129814-63e1-48fd-b1ad-1540c4609f2a.png)
